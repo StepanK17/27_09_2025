@@ -20,7 +20,7 @@ go mod tidy
 ### Запуск
 
 ```bash
-go run ./cmd/server
+go run cmd/main.go
 ```
 
 По умолчанию сервер слушает на `:8080`.
