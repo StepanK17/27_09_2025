@@ -1,69 +1,61 @@
 # File Downloader Service
 
-A simple HTTP service for downloading files from multiple URLs with task management and persistence.
+Простой HTTP сервис для скачивания файлов с нескольких URL с управлением задачами и сохранением состояния.
 
-## Features
+## Функции
 
-* Accepts tasks from users with a list of links
-* Downloads files and stores them in local `./downloads` folder
-* Provides task status monitoring
-* Survives restarts: tasks are persisted and resumed after restart
+* Принимает задачи от пользователей со списком ссылок
+* Скачивает файлы и складывает их в локальную папку `./downloads`
+* Позволяет смотреть статус задачи
+* Переживает остановки/перезапуски: задачи сохраняются и подхватываются после рестарта
 
-## Getting Started
+## Запуск
 
-### Prerequisites
-
-Make sure you have Go installed on your system.
-
-### Installation
-
-Install dependencies:
+### Установка зависимостей
 
 ```bash
 go mod tidy
 ```
 
-### Running the Service
-
-Start the server:
+### Запуск
 
 ```bash
 go run ./cmd/server
 ```
 
-The server runs on `:8080` by default.
+По умолчанию сервер слушает на `:8080`.
 
-**Note:** The `downloads/` folder is created automatically on first run. Task state is stored in `tasks.json` file.
+**Примечание:** Папка `downloads/` создаётся автоматически при первом запуске. Состояние задач хранится в файле `tasks.json`.
 
-## Project Structure
+## Структура проекта
 
 ```
 file-downloader/
 ├── cmd/
 │   └── server/
-│       └── main.go        # entry point, server startup
+│       └── main.go        # точка входа, запуск сервера
 ├── internal/
 │   ├── api/
-│   │   └── handlers.go    # HTTP handlers
+│   │   └── handlers.go    # HTTP-обработчики
 │   ├── task/
-│   │   ├── model.go       # Task structure
-│   │   ├── store.go       # task persistence
-│   │   └── worker.go      # download worker
+│   │   ├── model.go       # структура Task
+│   │   ├── store.go       # сохранение/загрузка задач
+│   │   └── worker.go      # воркер для скачивания
 │   └── util/
-│       └── download.go    # DownloadFile utility function
-├── downloads/             # folder for downloaded files
-├── tasks.json             # persistent storage (auto-created)
+│       └── download.go    # вспомогательная функция DownloadFile
+├── downloads/             # папка для загруженных файлов
+├── tasks.json             # persistent storage (создаётся автоматически)
 ├── go.mod
 └── README.md
 ```
 
-## API Reference
+## API
 
-### Create Task
+### Создать задачу
 
 **POST** `http://localhost:8080/task`
 
-Request body (JSON):
+Тело запроса (JSON):
 
 ```json
 {
@@ -74,7 +66,7 @@ Request body (JSON):
 }
 ```
 
-Response example:
+Пример ответа:
 
 ```json
 {
@@ -90,11 +82,11 @@ Response example:
 }
 ```
 
-### Get Task Status
+### Получить статус задачи
 
 **GET** `http://localhost:8080/task/{id}`
 
-Success response example:
+Пример ответа (успешно):
 
 ```json
 {
@@ -109,7 +101,7 @@ Success response example:
 }
 ```
 
-Error response example:
+Пример ответа (с ошибкой):
 
 ```json
 {
@@ -126,18 +118,18 @@ Error response example:
 }
 ```
 
-## Task Lifecycle
+## Жизненный цикл задачи
 
-* **pending** - task created, waiting to start
-* **running** - files are being downloaded
-* **done** - all files downloaded successfully
-* **error** - at least one link failed to download, details in `errors` field
+* **pending** — задача создана, ждёт запуска
+* **running** — файлы скачиваются
+* **done** — всё успешно скачано
+* **error** — хотя бы одна ссылка не скачалась, детали в `errors`
 
-## Architecture
+## Архитектура и паттерны
 
-* `cmd/server` - entry point, HTTP server startup
-* `internal/api` - HTTP handler registration
-* `internal/task` - business logic (model, store, worker)
-* `internal/util` - utility functions (`DownloadFile`)
-* `tasks.json` - persistent task storage (atomic writes via `.tmp`)
-* `downloads/` - folder for downloaded files
+* `cmd/server` — точка входа, запуск HTTP-сервера
+* `internal/api` — регистрация HTTP-обработчиков
+* `internal/task` — бизнес-логика (модель, store, worker)
+* `internal/util` — вспомогательные функции (`DownloadFile`)
+* `tasks.json` — persistent-store задач (атомарная запись через `.tmp`)
+* `downloads/` — папка для загруженных файлов
