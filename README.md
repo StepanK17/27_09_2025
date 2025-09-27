@@ -1,60 +1,82 @@
-File Downloader Service
-# Функции:
+# File Downloader Service
 
-принимает задачи от пользователей со списком ссылок;
-скачивает файлы и складывает их в локальную папку ./downloads;
-позволяет смотреть статус задачи;
-переживает остановки/перезапуски: задачи сохраняются и подхватываются после рестарта.
-Запуск
-Bash
+A simple HTTP service for downloading files from multiple URLs with task management and persistence.
 
-# установка зависимостей
-go mod tidy  
+## Features
 
-# запуск
-go run ./cmd/server  
+* Accepts tasks from users with a list of links
+* Downloads files and stores them in local `./downloads` folder
+* Provides task status monitoring
+* Survives restarts: tasks are persisted and resumed after restart
 
-# сервер слушает на :8080
-Папка downloads создаётся автоматически при первом запуске.
-Состояние задач хранится в файле tasks.json.
+## Getting Started
 
-Структура проекта
-text
+### Prerequisites
 
+Make sure you have Go installed on your system.
+
+### Installation
+
+Install dependencies:
+
+```bash
+go mod tidy
+```
+
+### Running the Service
+
+Start the server:
+
+```bash
+go run ./cmd/server
+```
+
+The server runs on `:8080` by default.
+
+**Note:** The `downloads/` folder is created automatically on first run. Task state is stored in `tasks.json` file.
+
+## Project Structure
+
+```
 file-downloader/
 ├── cmd/
 │   └── server/
-│       └── main.go          # точка входа, запуск сервера
+│       └── main.go        # entry point, server startup
 ├── internal/
 │   ├── api/
-│   │   └── handlers.go      # HTTP-обработчики
+│   │   └── handlers.go    # HTTP handlers
 │   ├── task/
-│   │   ├── model.go         # структура Task
-│   │   ├── store.go         # сохранение/загрузка задач
-│   │   └── worker.go        # воркер для скачивания
+│   │   ├── model.go       # Task structure
+│   │   ├── store.go       # task persistence
+│   │   └── worker.go      # download worker
 │   └── util/
-│       └── download.go      # вспомогательная функция DownloadFile
-├── downloads/               # папка для загруженных файлов
-├── tasks.json               # persistent storage (создаётся автоматически)
+│       └── download.go    # DownloadFile utility function
+├── downloads/             # folder for downloaded files
+├── tasks.json             # persistent storage (auto-created)
 ├── go.mod
 └── README.md
-API
-1. Создать задачу
-POST http://localhost:8080/task
-Body → JSON:
+```
 
-JSON
+## API Reference
 
+### Create Task
+
+**POST** `http://localhost:8080/task`
+
+Request body (JSON):
+
+```json
 {
   "links": [
     "https://golang.org/doc/gopher/frontpage.png",
     "https://httpbin.org/image/jpeg"
   ]
 }
-Пример ответа:
+```
 
-JSON
+Response example:
 
+```json
 {
   "id": "c7b4fe1f-1234-4567-8901-dfc18df1893f",
   "links": [
@@ -66,13 +88,15 @@ JSON
   "updated_at": "2024-06-15T12:00:00Z",
   "errors": null
 }
-2. Получить статус задачи
-GET http://localhost:8080/task/{id}
+```
 
-Пример ответа (успешно):
+### Get Task Status
 
-JSON
+**GET** `http://localhost:8080/task/{id}`
 
+Success response example:
+
+```json
 {
   "id": "c7b4fe1f-1234-4567-8901-dfc18df1893f",
   "links": [
@@ -83,10 +107,11 @@ JSON
   "updated_at": "2024-06-15T12:00:08Z",
   "errors": null
 }
-Пример ответа (с ошибкой):
+```
 
-JSON
+Error response example:
 
+```json
 {
   "id": "b1234abc-ef56-7890-1234-54321abcdeff",
   "links": [
@@ -99,16 +124,20 @@ JSON
     "https://httpbin.org/status/404: bad status: 404 Not Found"
   ]
 }
-Жизненный цикл задачи
-pending → задача создана, ждёт запуска.
-running → файлы скачиваются.
-done → всё успешно скачано.
-error → хотя бы одна ссылка не скачалась, детали в errors.
-Архитектура и паттерны
-cmd/server — точка входа, запуск HTTP‑сервера.
-internal/api — регистрация HTTP‑хэндлеров.
-internal/task — бизнес‑логика (модель, store, worker).
-internal/util — вспомогательные функции (DownloadFile).
-tasks.json — persistent‑store задач (атомарная запись через .tmp).
-downloads/ — папка для результатов.
+```
 
+## Task Lifecycle
+
+* **pending** - task created, waiting to start
+* **running** - files are being downloaded
+* **done** - all files downloaded successfully
+* **error** - at least one link failed to download, details in `errors` field
+
+## Architecture
+
+* `cmd/server` - entry point, HTTP server startup
+* `internal/api` - HTTP handler registration
+* `internal/task` - business logic (model, store, worker)
+* `internal/util` - utility functions (`DownloadFile`)
+* `tasks.json` - persistent task storage (atomic writes via `.tmp`)
+* `downloads/` - folder for downloaded files
